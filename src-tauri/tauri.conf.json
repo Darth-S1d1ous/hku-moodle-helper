@@ -1,0 +1,49 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "hku-moodle-helper",
+  "version": "0.1.0",
+  "identifier": "com.johnlyu.hku-moodle-helper",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "pnpm build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "hku-moodle-helper",
+        "width": 800,
+        "height": 600
+      },
+      {
+        "label": "login",
+        "title": "HKU Moodle Login",
+        "url": "https://moodle.hku.hk/login/index.php?authCAS=CAS",
+        "width": 480,
+        "height": 720,
+        "create": false
+      }
+    ],
+    "trayIcon": {
+      "id": "tray",
+      "iconPath": "icons/32x32.png",
+      "tooltip": "HKU Moodle Helper"
+    },
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

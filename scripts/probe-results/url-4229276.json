@@ -1,0 +1,27 @@
+{
+  "probedAt": "2026-09-13T06:57:00Z",
+  "startUrl": "https://moodle.hku.hk/mod/url/view.php?id=4229276",
+  "notes": {
+    "unauthenticated": "HTTP 303 X-Redirect-By: Moodle -> https://moodle.hku.hk/login/index.php. HTML is a Redirect interstitial; no Google Sheets URL is present.",
+    "auth": "HKU Portal CAS at https://moodle.hku.hk/login/index.php?authCAS=CAS -> https://hkuportal.hku.hk/cas/login?service=https%3A%2F%2Fmoodle.hku.hk%2Flogin%2Findex.php%3FauthCAS%3DCAS",
+    "guestButton": "The theme label 'Guest login' is the local username/password submit. Empty POST returns 'Invalid login, please try again'.",
+    "authenticatedDisplay": "Moodle URL module click-through page (not an HTTP redirect and not an iframe). Resource is in div.urlworkaround > a[href]."
+  },
+  "activity": {
+    "heading": "Preferred Name List",
+    "documentTitle": "CCCH9067_1A_2026: Preferred Name List | hkumoodle",
+    "courseId": "138705",
+    "cmid": "4229276",
+    "cmType": "url",
+    "description": "Please fill in this preferred name list. It will help me and Marco get to know you sooner.",
+    "workaroundText": "Click on Preferred Name List to open the resource.",
+    "externalUrl": "https://docs.google.com/spreadsheets/d/1Gq9zayvivuLiCIRczbFlHTPLOZ0UVP8VOsxYDWTMq2w/edit?usp=sharing",
+    "courseHome": "https://moodle.hku.hk/course/view.php?id=138705",
+    "prev": "https://moodle.hku.hk/mod/resource/view.php?id=4229459",
+    "next": "https://moodle.hku.hk/mod/url/view.php?id=4229277"
+  },
+  "extractor": {
+    "selector": ".urlworkaround a[href]",
+    "htmlPattern": "<div class=\"urlworkaround\">Click on <a href=\"EXTERNAL_URL\">TITLE</a> to open the resource.</div>"
+  }
+}

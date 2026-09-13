@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="/src/styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HKU Moodle Helper</title>
+    <script type="module" src="/src/main.ts" defer></script>
+  </head>
+
+  <body>
+    <div class="app">
+      <aside id="sidebar" class="sidebar">
+        <fieldset class="filters">
+          <legend class="visually-hidden">Filters</legend>
+        </fieldset>
+      </aside>
+
+      <button
+        id="splitter"
+        class="splitter"
+        type="button"
+        aria-label="Toggle filters"
+        aria-controls="sidebar"
+        aria-expanded="true"
+      ></button>
+
+      <section class="board">
+        <label class="search">
+          <span class="visually-hidden">Search todos</span>
+          <input
+            id="search"
+            type="search"
+            placeholder="Search"
+            autocomplete="off"
+          />
+          <img
+            class="search-icon"
+            src="/src/assets/icons/search.svg"
+            width="13.6"
+            height="13.6"
+            alt=""
+          />
+        </label>
+
+        <ul id="todo-list" class="todo-list"></ul>
+      </section>
+    </div>
+  </body>
+</html>
