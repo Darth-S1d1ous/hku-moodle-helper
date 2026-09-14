@@ -87,6 +87,8 @@ jobs:
 
       # Builds installers and uploads them to a draft GitHub Release.
       # __VERSION__ is replaced with src-tauri/tauri.conf.json version.
+      # command: [pnpm] tauri build [--target ...]
+      # e.g. pnpm tauri build --target aarch64-apple-darwin
       - uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,6 +1,11 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { openUrl } from "@tauri-apps/plugin-opener";
+// handle url space mismatch:
+// dev: http://localhost:1420/src/assets/icons/check.svg
+// prod: rsc in dist/; in-package: asset:// / https://asset.localhost
+// vite cannot parse resources in runtime like innerHTML = <img src="..."> ..
+import checkIcon from "./assets/icons/check.svg";
 import { TODO_KINDS, type FetchResult, type TodoItem, type TodoKind } from "./types";
 
 const dateFmt = new Intl.DateTimeFormat(undefined, {
@@ -205,7 +210,7 @@ function mountFilters(): void {
       <label class="filter">
         <input type="checkbox" name="kind" value="${kind}" checked />
         <span class="filter-box">
-          <img src="/src/assets/icons/check.svg" width="12.2667" height="8.93333" alt="" />
+          <img src="${checkIcon}" width="12.2667" height="8.93333" alt="" />
         </span>
         <span class="filter-copy">
           <span class="filter-label">${escapeHtml(label)}</span>

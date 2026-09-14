@@ -25,3 +25,7 @@ dist-ssr
 
 # agents
 .cursorrules
+
+# temp
+temp/
+tmp/
