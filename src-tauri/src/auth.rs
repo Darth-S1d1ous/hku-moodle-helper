@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
 use tauri::webview::{PageLoadEvent, WebviewWindowBuilder};
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 use url::Url;
 
 const MOODLE_ORIGIN: &str = "https://moodle.hku.hk";
@@ -151,6 +151,8 @@ async fn harvest_once(app: &AppHandle) -> Result<(), String> {
     if let Some(login) = app.get_webview_window(LOGIN_LABEL) {
         login.close().map_err(err)?;
     }
+    let _ = app.emit("logged-in", ());
+
     Ok(())
 }
 

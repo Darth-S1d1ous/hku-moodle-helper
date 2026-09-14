@@ -2,7 +2,8 @@ export type TodoKind =
   | "assignment"
   | "turnitin"
   | "registration"
-  | "assessment";
+  | "assessment"
+  | "other";
 
 export interface TodoItem {
   id: string;
@@ -11,6 +12,11 @@ export interface TodoItem {
   kind: TodoKind;
   deadline: string;
   url: string;
+}
+
+export interface FetchResult {
+  source: "ajax" | "ical";
+  items: TodoItem[];
 }
 
 export const TODO_KINDS: { kind: TodoKind; label: string; description: string }[] =
@@ -34,5 +40,10 @@ export const TODO_KINDS: { kind: TodoKind; label: string; description: string }[
       kind: "assessment",
       label: "Assessments",
       description: "Quizzes and tests",
+    },
+    {
+      kind: "other",
+      label: "Other",
+      description: "Questionnaires and the rest",
     },
   ];

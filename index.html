@@ -16,32 +16,53 @@
         </fieldset>
       </aside>
 
-      <button
-        id="splitter"
-        class="splitter"
-        type="button"
-        aria-label="Toggle filters"
-        aria-controls="sidebar"
-        aria-expanded="true"
-      ></button>
-
-      <section class="board">
-        <label class="search">
-          <span class="visually-hidden">Search todos</span>
-          <input
-            id="search"
-            type="search"
-            placeholder="Search"
-            autocomplete="off"
-          />
+      <div class="splitter">
+        <button
+          id="splitter"
+          class="splitter-toggle"
+          type="button"
+          aria-label="Hide filters"
+          aria-controls="sidebar"
+          aria-expanded="true"
+        >
           <img
-            class="search-icon"
-            src="/src/assets/icons/search.svg"
-            width="13.6"
-            height="13.6"
+            class="splitter-icon"
+            src="/src/assets/icons/sidebar-toggle.svg"
+            width="14"
+            height="12"
             alt=""
           />
-        </label>
+        </button>
+      </div>
+
+      <section class="board">
+        <div class="toolbar">
+          <label class="search">
+            <span class="visually-hidden">Search todos</span>
+            <input
+              id="search"
+              type="search"
+              placeholder="Search"
+              autocomplete="off"
+            />
+            <img
+              class="search-icon"
+              src="/src/assets/icons/search.svg"
+              width="13.6"
+              height="13.6"
+              alt=""
+            />
+          </label>
+          <button id="refresh" class="refresh" type="button" aria-label="Refresh">
+            <img
+              class="refresh-icon"
+              src="/src/assets/icons/circular-arrow-svgrepo-com.svg"
+              width="16"
+              height="16"
+              alt=""
+            />
+          </button>
+        </div>
 
         <ul id="todo-list" class="todo-list"></ul>
       </section>

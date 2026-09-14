@@ -1,16 +1,11 @@
 mod auth;
 mod moodle;
+mod store;
 
 use tauri::{
     menu::{Menu, MenuItem, PredefinedMenuItem},
     Manager, WindowEvent,
 };
-
-// tauri::command is a macro that registers a function as callable from Frontend
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
 
 #[tauri::command]
 async fn start_login(app: tauri::AppHandle) -> Result<(), String> {
@@ -26,9 +21,16 @@ async fn session_status() -> Result<bool, String> {
 }
 
 #[tauri::command]
-async fn refresh_todos() -> Result<moodle::FetchResult, String> {
+async fn refresh_todos(app: tauri::AppHandle) -> Result<moodle::FetchResult, String> {
     let secrets = auth::load_secrets()?.ok_or_else(|| "not logged in".to_string())?;
-    moodle::fetch_todos(&secrets).await
+    let result = moodle::fetch_todos(&secrets).await?;
+    store::save(&app, &result)?;
+    Ok(result)
+}
+
+#[tauri::command]
+fn list_todos(app: tauri::AppHandle) -> Result<Option<moodle::FetchResult>, String> {
+    store::load(&app)
 }
 
 fn show_main(app: &tauri::AppHandle) {
@@ -58,10 +60,10 @@ pub fn run() { // pub, so main.rs can call this function
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
-            greet,
             start_login,
             session_status,
-            refresh_todos
+            refresh_todos,
+            list_todos
         ])
         .setup(|app| { // closure, a function called after the builder is created
             let show = MenuItem::with_id(app, "show", "Show", true, None::<&str>)?;
@@ -76,7 +78,14 @@ pub fn run() { // pub, so main.rs can call this function
             tray.set_menu(Some(menu))?;
             tray.on_menu_event(|app, event| match event.id.as_ref() {
                 "show" => show_main(app),
-                "refresh" => {}
+                "refresh" => {
+                    let app = app.clone();
+                    tauri::async_runtime::spawn(async move {
+                        if let Err(error) = refresh_todos(app).await {
+                            eprintln!("refresh_todos failed: {error}");
+                        }
+                    });
+                }
                 "login" => {
                     let app = app.clone();
                     tauri::async_runtime::spawn(async move {

@@ -1,11 +1,15 @@
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { MOCK_TODOS } from "./mock-todos";
-import { TODO_KINDS, type TodoItem, type TodoKind } from "./types";
+import { TODO_KINDS, type FetchResult, type TodoItem, type TodoKind } from "./types";
 
 const dateFmt = new Intl.DateTimeFormat(undefined, {
   dateStyle: "medium",
   timeStyle: "short",
 });
+
+let todos: TodoItem[] = [];
+let needsLogin = false;
 
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (char) => {
@@ -39,6 +43,65 @@ function matchesQuery(todo: TodoItem, query: string): boolean {
   return haystack.includes(query);
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+type Urgency = "critical" | "week" | "fortnight" | "month" | "later";
+
+const URGENCY_LABEL: Record<Urgency, string> = {
+  critical: "Due within 3 days",
+  week: "Due this week",
+  fortnight: "Due within 2 weeks",
+  month: "Due this month",
+  later: "Due later",
+};
+
+// Bands from now: [-3d, 3d] ! ; (3d, 7d) red; [7d, 14d) yellow; [14d, 30d) green; else gray.
+function urgencyFor(deadline: string, now = Date.now()): Urgency {
+  const delta = Date.parse(deadline) - now;
+  if (Number.isNaN(delta)) {
+    return "later";
+  }
+  if (delta >= -3 * DAY_MS && delta <= 3 * DAY_MS) {
+    return "critical";
+  }
+  if (delta > 3 * DAY_MS && delta < 7 * DAY_MS) {
+    return "week";
+  }
+  if (delta >= 7 * DAY_MS && delta < 14 * DAY_MS) {
+    return "fortnight";
+  }
+  if (delta >= 14 * DAY_MS && delta < 30 * DAY_MS) {
+    return "month";
+  }
+  return "later";
+}
+
+function deadlineMs(todo: TodoItem): number {
+  const ms = Date.parse(todo.deadline);
+  return Number.isNaN(ms) ? Number.POSITIVE_INFINITY : ms;
+}
+
+function isFarPast(todo: TodoItem, now = Date.now()): boolean {
+  const ms = Date.parse(todo.deadline);
+  return !Number.isNaN(ms) && ms < now - 3 * DAY_MS;
+}
+
+function pastHeadingHtml(): string {
+  return `
+    <li class="past-divider">
+      <h3 class="past-divider-label">Past</h3>
+    </li>
+  `;
+}
+
+function urgencyHtml(urgency: Urgency): string {
+  const label = URGENCY_LABEL[urgency];
+  if (urgency === "critical") {
+    return `<span class="urgency urgency-bang" role="img" aria-label="${label}">!</span>`;
+  }
+  return `<span class="urgency urgency-dot urgency-${urgency}" role="img" aria-label="${label}"></span>`;
+}
+
 function cardHtml(todo: TodoItem): string {
   const when = dateFmt.format(new Date(todo.deadline));
   const course = todo.course ? `${escapeHtml(todo.course)} · ` : "";
@@ -49,7 +112,7 @@ function cardHtml(todo: TodoItem): string {
       </span>
       <div class="card-body">
         <div>
-          <h2 class="card-title">${escapeHtml(todo.title)}</h2>
+          <h2 class="card-title">${urgencyHtml(urgencyFor(todo.deadline))}<span class="card-title-text">${escapeHtml(todo.title)}</span></h2>
           <p class="card-text">${course}Due ${escapeHtml(when)}</p>
         </div>
         <a class="card-open" href="${escapeHtml(todo.url)}" target="_blank" rel="noopener noreferrer">
@@ -58,6 +121,48 @@ function cardHtml(todo: TodoItem): string {
       </div>
     </li>
   `;
+}
+
+function loginHtml(): string {
+  return `
+    <li class="empty">
+      <button type="button" class="card-open" data-login>Log in</button>
+    </li>
+  `;
+}
+
+function applyResult(result: FetchResult | null): void {
+  if (!result) {
+    todos = [];
+    needsLogin = true;
+    return;
+  }
+  todos = result.items;
+  needsLogin = false;
+}
+
+function isNotLoggedIn(error: unknown): boolean {
+  return String(error).includes("not logged in");
+}
+
+async function loadCache(): Promise<void> {
+  try {
+    applyResult(await invoke<FetchResult | null>("list_todos"));
+  } catch {
+    todos = [];
+  }
+  render();
+}
+
+async function refresh(): Promise<void> {
+  try {
+    applyResult(await invoke<FetchResult>("refresh_todos"));
+  } catch (error) {
+    if (isNotLoggedIn(error)) {
+      needsLogin = true;
+    }
+  }
+  render();
 }
 
 function render(): void {
@@ -69,14 +174,24 @@ function render(): void {
 
   const kinds = selectedKinds();
   const query = search.value.trim().toLowerCase();
-  const items = MOCK_TODOS.filter(
-    (todo) => kinds.has(todo.kind) && matchesQuery(todo, query),
-  );
+  const items = todos
+    .filter((todo) => kinds.has(todo.kind) && matchesQuery(todo, query))
+    .sort((a, b) => deadlineMs(a) - deadlineMs(b));
 
-  list.innerHTML =
-    items.length > 0
-      ? items.map(cardHtml).join("")
-      : `<li class="empty">No matching to-dos</li>`;
+  const current = items.filter((todo) => !isFarPast(todo));
+  const past = items.filter((todo) => isFarPast(todo));
+
+  const login = needsLogin ? loginHtml() : "";
+  const cards = current.map(cardHtml).join("");
+  const pastSection = past.length
+    ? pastHeadingHtml() + past.map(cardHtml).join("")
+    : "";
+  const empty =
+    !cards && !pastSection && !needsLogin
+      ? `<li class="empty">No matching to-dos</li>`
+      : "";
+
+  list.innerHTML = login + cards + pastSection + empty;
 }
 
 async function openExternal(url: string): Promise<void> {
@@ -111,13 +226,21 @@ function mountFilters(): void {
 
 window.addEventListener("DOMContentLoaded", () => {
   mountFilters();
-  render();
 
   document.querySelector(".filters")?.addEventListener("change", render);
   document.querySelector("#search")?.addEventListener("input", render);
+  document.querySelector("#refresh")?.addEventListener("click", () => {
+    void refresh();
+  });
 
   document.querySelector("#todo-list")?.addEventListener("click", (event) => {
-    const link = (event.target as HTMLElement).closest<HTMLAnchorElement>("a.card-open");
+    const target = event.target as HTMLElement;
+    if (target.closest("[data-login]")) {
+      void invoke("start_login");
+      return;
+    }
+
+    const link = target.closest<HTMLAnchorElement>("a.card-open");
     if (!link || !("__TAURI_INTERNALS__" in window)) {
       return;
     }
@@ -129,5 +252,11 @@ window.addEventListener("DOMContentLoaded", () => {
   splitter?.addEventListener("click", () => {
     const collapsed = document.querySelector(".app")?.classList.toggle("sidebar-collapsed");
     splitter.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    splitter.setAttribute("aria-label", collapsed ? "Show filters" : "Hide filters");
   });
+
+  void listen("logged-in", () => {
+    void refresh();
+  });
+  void loadCache();
 });
