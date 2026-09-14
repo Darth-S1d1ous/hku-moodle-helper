@@ -96,10 +96,7 @@ function pastHeadingHtml(): string {
 
 function urgencyHtml(urgency: Urgency): string {
   const label = URGENCY_LABEL[urgency];
-  if (urgency === "critical") {
-    return `<span class="urgency urgency-bang" role="img" aria-label="${label}">!</span>`;
-  }
-  return `<span class="urgency urgency-dot urgency-${urgency}" role="img" aria-label="${label}"></span>`;
+  return `<span class="card-icon urgency-${urgency}" role="img" aria-label="${escapeHtml(label)}"></span>`;
 }
 
 function cardHtml(todo: TodoItem): string {
@@ -107,17 +104,12 @@ function cardHtml(todo: TodoItem): string {
   const course = todo.course ? `${escapeHtml(todo.course)} · ` : "";
   return `
     <li class="card">
-      <span class="card-icon">
-        <img src="/src/assets/icons/info.svg" width="29.6667" height="29.6667" alt="" />
-      </span>
+      ${urgencyHtml(urgencyFor(todo.deadline))}
       <div class="card-body">
-        <div>
-          <h2 class="card-title">${urgencyHtml(urgencyFor(todo.deadline))}<span class="card-title-text">${escapeHtml(todo.title)}</span></h2>
-          <p class="card-text">${course}Due ${escapeHtml(when)}</p>
-        </div>
-        <a class="card-open" href="${escapeHtml(todo.url)}" target="_blank" rel="noopener noreferrer">
-          Open
-        </a>
+        <h2 class="card-title">
+          <a class="card-title-link" href="${escapeHtml(todo.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(todo.title)}</a>
+        </h2>
+        <p class="card-text">${course}Due ${escapeHtml(when)}</p>
       </div>
     </li>
   `;
@@ -240,7 +232,7 @@ window.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const link = target.closest<HTMLAnchorElement>("a.card-open");
+    const link = target.closest<HTMLAnchorElement>("a.card-title-link");
     if (!link || !("__TAURI_INTERNALS__" in window)) {
       return;
     }
