@@ -10,6 +10,8 @@
 ![tauri](https://img.shields.io/badge/Tauri-2-24C8DB?logo=tauri&logoColor=white)
 ![platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey)
 
+![Main page](docs/images/main_page.png)
+
 ---
 
 ## English
